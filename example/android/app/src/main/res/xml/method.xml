@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Owned by this app, not the library: the keyboard's displayed name
+  (AndroidManifest.xml's <service android:label>) and its subtype list (here)
+  are both app-level resources, so every app built on this library brands its
+  own keyboard. This example ships one subtype matching KeyboardApp.tsx's
+  hand-written QWERTY layout — add more <subtype> entries (with their own
+  imeSubtypeLocale) for additional languages your own KeyboardApp renders.
+-->
+<input-method xmlns:android="http://schemas.android.com/apk/res/android">
+    <subtype
+        android:label="@string/keyboard_subtype_label"
+        android:imeSubtypeLocale="en_US"
+        android:imeSubtypeMode="keyboard" />
+</input-method>

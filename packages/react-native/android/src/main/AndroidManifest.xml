@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Declares CustomKeyboardService as an IME so a consuming app never has to add this block to its
+  own AndroidManifest.xml by hand — Gradle's manifest merger folds this into the final app
+  manifest automatically, since this is a normal Android library dependency (see
+  docs/adr/ADR-006). `${applicationId}` is a standard Gradle manifest placeholder, substituted
+  with the consuming app's own applicationId at merge time — this assumes the app's settings
+  screen is `MainActivity` at its package root, the same assumption every default React Native
+  app template already makes for its own launcher activity.
+
+  `@string/keyboard_service_label` and `@xml/method` are NOT defined here on purpose — every app
+  brands its own keyboard (display name, language subtypes), so each consuming app still supplies
+  these two small resources itself (see AGENTS.md and example/android/app/src/main/res/).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <service
+            android:name="com.reactnativecustomkeyboard.CustomKeyboardService"
+            android:label="@string/keyboard_service_label"
+            android:settingsActivity="${applicationId}.MainActivity"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+    </application>
+</manifest>

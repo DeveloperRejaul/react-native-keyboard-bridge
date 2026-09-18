@@ -1,0 +1,47 @@
+{
+  "name": "react-native-custom-keyboard",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Design a mobile system keyboard with ordinary React Native components. Single install: JS bridge, Android native module (autolinked), iOS native module + setup CLI, gestures, and word prediction all in one package.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "react-native-custom-keyboard": "bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "android",
+    "ios",
+    "react-native.config.js"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.compiler.json",
+    "test": "jest",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.74"
+  },
+  "dependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/plugin-transform-react-jsx": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7"
+  },
+  "devDependencies": {
+    "@react-native/babel-preset": "0.87.1",
+    "@react-native/jest-preset": "0.87.1",
+    "@types/jest": "^29.5.12",
+    "@types/react": "^19.2.0",
+    "@types/react-test-renderer": "^19.1.0",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "react": "19.2.3",
+    "react-native": "0.87.1",
+    "react-test-renderer": "19.2.3",
+    "typescript": "^5.5.4"
+  }
+}

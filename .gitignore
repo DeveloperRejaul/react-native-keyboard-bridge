@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+coverage/
+
+# Android
+packages/android/.gradle/
+packages/android/build/
+*.iml
+.idea/
+
+# iOS
+packages/ios/build/
+packages/ios/Pods/
+*.xcworkspace/xcuserdata/
+
+# Example RN app
+example/ios/Pods/
+example/android/.gradle/
+example/android/build/
+example/ios/build/

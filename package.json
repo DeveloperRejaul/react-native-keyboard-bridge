@@ -1,0 +1,23 @@
+{
+  "name": "react-native-custom-keyboard",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "example"
+    ],
+    "nohoist": [
+      "com.customkeyboard.example/**"
+    ]
+  },
+  "scripts": {
+    "build": "yarn workspace react-native-custom-keyboard build",
+    "test": "yarn workspace react-native-custom-keyboard test",
+    "lint": "yarn workspace react-native-custom-keyboard lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

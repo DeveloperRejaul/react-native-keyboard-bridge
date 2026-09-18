@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">CustomKeyboardExample</string>
+    <!-- Shown as the keyboard's name in system Settings > Languages & input and in the
+         "choose input method" picker. Change this to your own app/keyboard's name. -->
+    <string name="keyboard_service_label">My Custom Keyboard</string>
+    <!-- Shown next to the service label for each <subtype> in res/xml/method.xml. -->
+    <string name="keyboard_subtype_label">QWERTY</string>
+</resources>
