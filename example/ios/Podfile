@@ -33,11 +33,9 @@ target 'CustomKeyboardExample' do
   end
 end
 
-# EXPERIMENTAL — full RN (Hermes + JSI + Fabric) inside the keyboard extension target, per the
-# maintainer's explicit request to try this despite ADR-001/ADR-005's rejection of it (memory
-# ceiling risk on iOS extensions, and RN iOS internals calling UIApplication.shared in places,
-# which is unavailable in extensions). This is a spike to see how far pod integration alone gets,
-# not yet a working keyboard. See docs/adr/ADR-007 once conclusions are in.
+# The keyboard extension runs real React Native too (Hermes + JSI + Fabric) — see docs/adr/ADR-008,
+# which replaced the earlier JavaScriptCore mini-runtime (ADR-005) after ADR-007's spike proved
+# it renders and accepts real text input inside the extension process.
 target 'CustomKeyboardExtension' do
   config = use_native_modules!
   use_react_native!(

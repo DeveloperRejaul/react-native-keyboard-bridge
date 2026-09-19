@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["core"],
+  "exclude": ["dist", "node_modules"]
+}

@@ -1,4 +1,4 @@
-# react-native-custom-keyboard
+# react-native-keyboard-bridge
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -10,7 +10,7 @@ platform. You write **one** hand-written component; it runs live on both.
 ```tsx
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { commitText, deleteSurroundingText } from 'react-native-custom-keyboard';
+import { commitText, deleteSurroundingText } from 'react-native-keyboard-bridge';
 
 export default function KeyboardApp() {
   const [shifted, setShifted] = useState(false);
@@ -43,19 +43,19 @@ right-to-left layouts are all first-class, not an afterthought.
 
 Every other approach to a custom keyboard on React Native means dropping into
 Kotlin and Swift and re-implementing your UI twice, natively, by hand. This
-library hosts a **real, live** React Native runtime inside the Android IME
-process, and a **compiled** version of the same component inside iOS's Custom
-Keyboard Extension (where Apple's tight extension memory ceiling rules out a
-full RN runtime — see [ADR-001](docs/adr/ADR-001-ios-no-live-js-runtime.md)/
-[ADR-005](docs/adr/ADR-005-ios-mini-js-runtime.md)). One component, two
-runtimes, so you write it once.
+library hosts a **real, live** React Native runtime — Hermes + JSI + Fabric —
+inside both the Android IME process and iOS's Custom Keyboard Extension (see
+[ADR-008](docs/adr/ADR-008-ios-full-react-native.md), which superseded an
+earlier, more restricted JavaScriptCore-based approach on iOS once testing
+showed full RN works there too). One component, one runtime shape, so you
+write it once.
 
 ## Install
 
 ```bash
-yarn add react-native-custom-keyboard
+yarn add react-native-keyboard-bridge
 # or
-npm install react-native-custom-keyboard
+npm install react-native-keyboard-bridge
 ```
 
 That's the only package you install. Android, iOS, the JS bridge, gesture/
@@ -86,21 +86,57 @@ autolinking — no `AndroidManifest.xml` or `MainApplication.kt` edits needed.
 ### iOS setup
 
 Apple requires a custom keyboard to live in its own Xcode **App Extension**
-target — no install step can create that invisibly, so this is the one
-manual command iOS needs:
+target — no install step can create that invisibly, so this needs two manual
+steps:
 
 ```bash
 cd your-app
-bundle exec pod install   # if you haven't already, for CocoaPods' xcodeproj gem
-npx react-native-custom-keyboard setup-ios
-npx react-native-custom-keyboard build-keyboard src/keyboard/KeyboardApp.tsx ios/CustomKeyboardExtension/KeyboardApp.compiled.js
+npx react-native-keyboard-bridge setup-ios
 ```
 
-`setup-ios` creates (or refreshes) the extension target, wires up this
-package's Swift sources, and scaffolds a starter `Info.plist` you can rename/
-brand. `build-keyboard` compiles your hand-written component into the plain
-JS bundle the extension's embedded `JSContext` runs — re-run it whenever that
-component changes.
+This creates (or refreshes) the extension target, wires up this package's
+Swift sources, scaffolds a starter `Info.plist` you can rename/brand, and —
+since the extension runs real React Native — checks whether its Podfile
+target has a `use_react_native!` block yet. If not, it prints the exact
+snippet to add (Podfiles are hand-maintained Ruby, so this package won't
+rewrite yours for you):
+
+```ruby
+target 'CustomKeyboardExtension' do
+  config = use_native_modules!
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+end
+```
+
+Then install pods and build the JS bundle the extension loads:
+
+```bash
+bundle exec pod install
+npx react-native-keyboard-bridge build-keyboard
+```
+
+`build-keyboard` wraps the standard `react-native bundle` CLI — re-run it
+whenever your keyboard component changes.
+
+### Developing with live reload
+
+Editing your keyboard component doesn't require a rebundle-and-reinstall loop — DEBUG builds
+connect to Metro like any other RN screen (see [ADR-009](docs/adr/ADR-009-dev-metro-live-reload.md)):
+
+- **Android**: start Metro (`npx react-native start`), run `adb reverse tcp:8081 tcp:8081`
+  (automatic if you use `react-native run-android`), and install a debug build. Nothing else to
+  configure — this is standard React Native behavior.
+- **iOS**: also start Metro, then, one time only: set `RequestsOpenAccess` to `true` in the
+  extension's `Info.plist` (`NSExtension > NSExtensionAttributes`) and enable "Allow Full Access"
+  for the keyboard in Settings — an extension has no network access without both. **Flip
+  `RequestsOpenAccess` back to `false` before a release build**; it's a real permission prompt
+  end users would otherwise see for no reason.
+
+Release/production builds on both platforms always use a committed bundle — none of this affects
+what ships.
 
 ### Enabling the keyboard (end users)
 
@@ -109,7 +145,7 @@ user — from your app's own screen (an onboarding step, typically), guide them
 there yourself:
 
 ```tsx
-import { openInputMethodSettings, showInputMethodPicker } from 'react-native-custom-keyboard';
+import { openInputMethodSettings, showInputMethodPicker } from 'react-native-keyboard-bridge';
 
 <Button title="Enable keyboard" onPress={openInputMethodSettings} />
 <Button title="Switch keyboard" onPress={showInputMethodPicker} /> {/* Android only */}
@@ -119,10 +155,10 @@ import { openInputMethodSettings, showInputMethodPicker } from 'react-native-cus
 
 | | Android | iOS |
 |---|---|---|
-| Runtime | Real React Native (New Architecture, `ReactHost`) hosted inside the IME process | `JavaScriptCore` (system framework) running a small hand-rolled hooks + element-tree prelude |
-| Your component | Runs live, unmodified | Compiled ahead of time to plain JS by `bundleKeyboardApp` |
-| Rendering | Fabric, same as any RN screen | A small native `View`/`Text`/`TouchableOpacity` interpreter (`DynamicViewRenderer`) |
-| Text editing | `InputConnection`, via a native bridge module | `UITextDocumentProxy`, via the same function names |
+| Runtime | Real React Native (New Architecture, `ReactHost`) hosted inside the IME process | Real React Native (New Architecture, `RCTReactNativeFactory`) hosted inside the extension process |
+| Your component | Runs live, unmodified | Runs live, unmodified |
+| Rendering | Fabric, same as any RN screen | Fabric, same as any RN screen |
+| Text editing | `InputConnection`, via a native bridge module (`KeyboardBridgeModule.kt`) | `UITextDocumentProxy`, via a native bridge module (`KeyboardBridgeModule.swift`) |
 
 Not every bridge function has an equivalent on both platforms — iOS's keyboard
 extension API surface is smaller than Android's. See
@@ -142,25 +178,31 @@ Verified on real tooling, not just compiled:
   IME's manifest entry and native-module registration verified to merge in
   automatically via a clean Gradle build with zero manual wiring in the
   consuming app.
-- iOS: the Custom Keyboard Extension builds, embeds `JavaScriptCore`, and
-  runs the same hand-written component (compiled by `bundleKeyboardApp`) —
-  verified by `miniReactBundle.test.ts` (the compiled bundle actually
-  executes against a fake mini-runtime) and by building the extension target
-  and statically inspecting the resulting binary.
+- iOS: the Custom Keyboard Extension builds and boots real React Native
+  (Hermes + JSI + Fabric) — verified with a real Simulator run: the JS
+  runtime thread reaches a normal idle steady state (checked via `lldb`), the
+  hand-written component renders on screen, and typed keys commit real text
+  through `textDocumentProxy` (screenshots + log inspection; see
+  [ADR-008](docs/adr/ADR-008-ios-full-react-native.md)).
 - The one-command `setup-ios`/`build-keyboard` CLI verified against a real
   consumer app (this repo's own `example/`), driven exactly the way an
   external project would use it.
 
-Known gap: no XCTest coverage yet for iOS's native `DynamicViewRenderer`/
-`JSKeyboardRuntime` themselves — see
-[ADR-005](docs/adr/ADR-005-ios-mini-js-runtime.md)'s "Consequences".
+Known gaps:
+- No XCTest coverage yet for iOS's `RNKeyboardBootstrap`/`KeyboardBridgeModule`
+  themselves — see [ADR-008](docs/adr/ADR-008-ios-full-react-native.md)'s
+  "Consequences".
+- No real-device memory verification for iOS yet — Simulator doesn't enforce
+  Apple's actual extension memory ceiling, so this is the one open risk from
+  moving iOS to full React Native. Test on a real device before shipping to
+  production.
 
 ## Repo layout
 
 ```
-packages/react-native/   The published package: JS bridge/settings/gestures/
-                         prediction, Android native module (android/), iOS
-                         native module + setup CLI (ios/, bin/)
+src/                     The published package: JS bridge/settings/gestures/
+                         prediction (core/), Android native module (android/),
+                         iOS native module + setup CLI (ios/, bin/)
 example/                 Demo app + the reference keyboard implementation
 docs/adr/                Architecture Decision Records
 docs/api.md              Public API reference

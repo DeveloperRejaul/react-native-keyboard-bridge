@@ -1,0 +1,8 @@
+{
+  "label": "Advanced",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "description": "Project structure and patterns for a production keyboard app — how to organize a real KeyboardApp beyond the single-file tutorial examples."
+  }
+}

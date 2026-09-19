@@ -5,7 +5,7 @@ rootProject.name = 'com.customkeyboard.example'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
 
-// react-native-custom-keyboard's android/ folder is picked up automatically by
+// react-native-keyboard-bridge's android/ folder is picked up automatically by
 // autolinkLibrariesFromCommand() above (it's a normal npm dependency with an android/build.gradle
 // at its root) — no manual `include`/`projectDir` wiring needed, unlike before this package
 // consolidated packages/android into itself (see docs/adr/ADR-006).

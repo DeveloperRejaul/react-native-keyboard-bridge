@@ -1,16 +1,16 @@
-# `react-native-custom-keyboard` API Reference
+# `react-native-keyboard-bridge` API Reference
 
-Public API surface exported from `packages/react-native/src/index.ts` — the
+Public API surface exported from `src/core/index.ts` — the
 single published package (see ADR-006). Keep this file in sync with that
 entry point (AGENTS.md Section 3).
 
 There is no `KeyLayout`/schema type and no ready-to-use keyboard component in
 this library — a keyboard is a hand-written `View`/`Text`/`TouchableOpacity`
-component you write yourself, the same file running live on Android (real
-React Native) and iOS (a compiled mini-runtime — see ADR-005). Beyond the
-bridge/settings functions below, this package also supplies: the `Key`/
+component you write yourself, the same file running live on **both** Android
+and iOS now (real React Native, Hermes + JSI + Fabric — see ADR-008). Beyond
+the bridge/settings functions below, this package also supplies: the `Key`/
 `KeyRow` data shape used by the gesture-matching feature, word prediction,
-and iOS's build-time compiler + setup CLI.
+and iOS's setup CLI.
 
 ## `Key` / `KeyRow` / `KeyAction`
 ```ts
@@ -71,7 +71,7 @@ Pluggable — apps may supply frequency-weighted or ML-backed implementations.
 Minimal `WordPredictor` backed by an in-memory word list. Case-insensitive
 prefix match, ranked shortest-then-alphabetical.
 
-## `react-native-custom-keyboard`
+## `react-native-keyboard-bridge`
 
 The React Native package: raw bridge functions for a hand-written keyboard
 component to call directly from its own `onPress` handlers — no schema, no
@@ -82,7 +82,7 @@ call.
 Plain functions wrapping the native `KeyboardBridge` module directly, no
 object/class to instantiate:
 ```tsx
-import { commitText } from 'react-native-custom-keyboard';
+import { commitText } from 'react-native-keyboard-bridge';
 <TouchableOpacity onPress={() => commitText('a')}><Text>a</Text></TouchableOpacity>
 ```
 ```ts
@@ -98,21 +98,18 @@ function switchToPreviousInputMethod(): void;
 function hideKeyboard(): void;
 function getCursorCapsMode(reqModes?: number): Promise<number>; // defaults to CapsModeRequest.SENTENCES
 ```
-This file (`bridge.ts`) itself only ever runs on Android (calls into the native module
-`CustomKeyboardService` registers — see ADR-003) — outside that context, every function here is a
-safe no-op instead of throwing, so a component that calls them doesn't need to guard for it. iOS's
-own extension doesn't run this npm package's compiled JS at all (see ADR-005): its mini-runtime
-(this package's own `ios/Resources/mini-react-runtime.js`) independently provides *most* of these same
-function names as globals, calling straight into `textDocumentProxy`/`UIInputViewController`
-instead — a hand-written `KeyboardApp.tsx` calls the same function names on both platforms, but
-they're two separate implementations, and not every function has an iOS side at all.
+This file (`bridge.ts`) runs on **both** platforms now (see ADR-008): Android's
+`CustomKeyboardService` and iOS's `KeyboardViewController` both host real React Native and both
+register a native module named `KeyboardBridge` (`android/`'s `KeyboardBridgeModule.kt` and
+`ios/`'s `KeyboardBridgeModule.swift`). Outside either IME/extension process every function here
+is a safe no-op instead of throwing, so a component that calls them doesn't need to guard for it.
 
 ### Bridge-function parity table
 `UITextDocumentProxy`/`UIInputViewController` (the only API surface a keyboard extension gets on
 iOS) is a much smaller surface than Android's `InputConnection`, so parity isn't 1:1. Functions
-with no iOS implementation are still defined in the mini-runtime, as **safe no-ops** (resolving a
-safe default when they return a value) — not left `undefined` — the same convention
-`packages/react-native/src/bridge.ts` itself already follows when its native module isn't
+with no iOS implementation are still defined in the iOS native module, as **safe no-ops**
+(resolving a safe default when they return a value) — not left `undefined` — the same convention
+`src/core/bridge.ts` itself already follows when its native module isn't
 available, so a shared `KeyboardApp.tsx` never needs to guard for it.
 
 | Function | iOS | Notes |
@@ -133,10 +130,10 @@ available, so a shared `KeyboardApp.tsx` never needs to guard for it.
 | `performEditorAction` | ❌ | no generic "perform action" API |
 | `setComposingText` / `setComposingRegion` / `finishComposingText` | ❌ | no marked/composing-text API for extensions |
 | `beginBatchEdit` / `endBatchEdit` | ❌ | no batch-edit concept |
-| `getCurrentEditorInfo` / `onEditorInfoChange` / `onSelectionChange` | ❌ | no `EditorInfo` descriptor or event-emitter mechanism in the mini-runtime |
+| `getCurrentEditorInfo` / `onEditorInfoChange` / `onSelectionChange` | ❌ | no `EditorInfo` descriptor or event-emitter mechanism wired up on the iOS side |
 | `hideKeyboard` | ❌ | no self-dismiss API for third-party keyboard extensions |
 
-❌ rows are Android only; the mini-runtime's same-named global is a silent no-op on iOS (or
+❌ rows are Android only; the iOS native module's same-named method is a silent no-op (or
 resolves a safe default, e.g. `null`/`''`, for value-returning ones).
 
 `sendKeyEvent`/`performEditorAction` cover the cases `commitText`/
@@ -174,7 +171,7 @@ safe default (`false`/no-op) there instead of throwing.
 
 ## Native modules
 
-### Android (`packages/react-native/android`)
+### Android (`src/android`)
 `CustomKeyboardService` hosts its own standalone `ReactHost` (New
 Architecture, Fabric) inside the `InputMethodService` — see ADR-003.
 `KeyboardBridgeModule` exposes all of the raw bridge functions above to JS as
@@ -190,67 +187,55 @@ automatically (Gradle manifest merging); the consuming app still supplies its
 own `res/xml/method.xml`/`keyboard_service_label` (keyboard branding/subtypes
 are app-specific, not library defaults).
 
-### iOS (`packages/react-native/ios`)
-`KeyboardViewController` embeds a `JSContext` (`JSKeyboardRuntime`) running
-the compiled `KeyboardApp.tsx` bundle live, rendered by `DynamicViewRenderer`,
-a small native `View`/`Text`/`TouchableOpacity` interpreter — see ADR-005
-(supersedes ADR-001/ADR-004). Key presses/queries call
-`textDocumentProxy`/`UIInputViewController` directly (no custom bridge
-needed — these APIs are already exposed to the extension) via the
-mini-runtime's own same-named globals — see the parity table above for
-exactly which bridge functions this covers. `performHapticFeedback` uses
+### iOS (`src/ios`)
+`KeyboardViewController` boots real React Native — `RNKeyboardBootstrap`
+wraps `RCTReactNativeFactory`/`RCTAppDependencyProvider` and requests a
+`"KeyboardApp"` surface via `RCTRootViewFactory.view(withModuleName:)` (no
+`UIWindow` needed, unlike the factory's usual `startReactNative` entry point
+— extensions don't have one). See ADR-008 (supersedes ADR-005's
+JavaScriptCore mini-runtime, itself supersedes ADR-001/ADR-004).
+`KeyboardBridgeModule.swift`/`.m` is the iOS counterpart to `android/`'s
+`KeyboardBridgeModule.kt` — registered as `NativeModules.KeyboardBridge`
+automatically (Objective-C runtime class scanning, no package list needed),
+reaching the active keyboard's `textDocumentProxy` via
+`KeyboardViewController.current` (a `static weak var`, since a bridge module
+has no view of its own) — see the parity table above for exactly which
+bridge functions this covers. `performHapticFeedback` uses
 `UIImpactFeedbackGenerator`; `playClickSound` uses `UIDevice.playInputClick()`
-(the extension's `KeyboardViewController` conforms to `UIInputViewAudioFeedback`
-for this to work, per Apple's own custom-keyboard guidance).
+(`KeyboardViewController` conforms to `UIInputViewAudioFeedback` for this to
+work, per Apple's own custom-keyboard guidance).
 
 `KeyboardSettingsModule.swift`/`.m` (registered on the *host app's* own
 ReactHost, not the extension's) exposes `openInputMethodSettings` — opens
 this app's own Settings page, the closest iOS allows a containing app to get
 to enabling its keyboard extension.
 
-### `bundleKeyboardApp(source: string, filename?: string): BundleOutcome`
-Build-time only, in `packages/react-native/src/compiler/miniReactBundle.ts` —
-**not** exported from this package's main entry point (see ADR-005's
-"Consequences"; importing it from RN application code breaks Metro
-bundling). Reachable only via `bin/cli.js`'s `build-keyboard` command (see
-below). Compiles a whole hand-written keyboard component — the same file
-`example/src/keyboard/KeyboardApp.tsx` is — into a JS string
-`JSKeyboardRuntime` runs live inside the extension's `JSContext`. This
-doesn't just extract static structure — the whole component is transformed,
-so `.map()`, conditionals, and `useState` all become real runnable JS.
-```ts
-type BundleOutcome =
-  | { success: true; code: string }
-  | { success: false; errors: BundleError[] };
-interface BundleError { message: string; }
-```
-Only three import sources are recognized (everything else is a compile
-error): `"react"` (`useState`), `"react-native"`
-(`View`/`Text`/`TouchableOpacity`/`StyleSheet`), and
-`"react-native-custom-keyboard"` (most of the bridge functions above) —
-`ios/Resources/mini-react-runtime.js` provides these as globals in
-the `JSContext`, so the compiled code doesn't import them at runtime.
-
 ### CLI (`bin/cli.js`)
-Installed as the `react-native-custom-keyboard` binary — run via
-`npx react-native-custom-keyboard <command>` from your app's root, or (in
-this repo) `node packages/react-native/bin/cli.js <command>`.
+Installed as the `react-native-keyboard-bridge` binary — run via
+`npx react-native-keyboard-bridge <command>` from your app's root, or (in
+this repo) `node src/bin/cli.js <command>`.
 
 - **`setup-ios [iosDir]`** (default `iosDir`: `./ios`) — creates or refreshes
   the `CustomKeyboardExtension` Xcode target, wired to this package's Swift
-  sources; scaffolds a starter `Info.plist`/`KeyboardApp.compiled.js` under
-  `<iosDir>/CustomKeyboardExtension/` if missing. Idempotent by recreation
-  (see ADR-005/ADR-006) — safe to re-run after updating this package. This is
-  the one manual step iOS can't avoid: Apple requires a distinct App
-  Extension target, which no CocoaPod/npm install can fabricate on its own.
-- **`build-keyboard <entry> <outFile>`** — wraps `bundleKeyboardApp`. Run it
-  (e.g. `npx react-native-custom-keyboard build-keyboard
-  src/keyboard/KeyboardApp.tsx ios/CustomKeyboardExtension/KeyboardApp.compiled.js`)
-  whenever `KeyboardApp.tsx` changes — this output is committed, app-owned
-  generated content, not something Xcode's build produces itself.
+  sources; scaffolds a starter `Info.plist`/`main.jsbundle` under
+  `<iosDir>/CustomKeyboardExtension/` if missing, and prints a Podfile
+  snippet to add if the extension target has no `use_react_native!` block
+  yet. Idempotent by recreation (see ADR-006) — safe to re-run after updating
+  this package. This is the one manual step iOS can't avoid: Apple requires
+  a distinct App Extension target, which no CocoaPod/npm install can
+  fabricate on its own.
+- **`build-keyboard [outFile] [--entry-file <file>] [--dev]`** — wraps the
+  standard `react-native bundle` CLI (see ADR-008; no custom compiler of our
+  own anymore). Run it (default `outFile`:
+  `ios/CustomKeyboardExtension/main.jsbundle`) whenever your JS changes —
+  this output is committed, app-owned generated content, not something
+  Xcode's build produces itself.
 
 ## Not yet implemented
-- XCTest coverage for `DynamicViewRenderer`/`JSKeyboardRuntime` themselves —
-  see ADR-005's "Consequences". `miniReactBundle.test.ts`
-  covers the compiler; the native Swift renderer/runtime don't have their own
-  test target yet.
+- XCTest coverage for `RNKeyboardBootstrap`/`KeyboardBridgeModule` — see
+  ADR-008's "Consequences". Verification so far has been a real Simulator
+  run (screenshots + `lldb`/log inspection, see ADR-007), not automated
+  tests.
+- Real-device memory verification for iOS's now-full-RN extension — see
+  ADR-008's "Consequences": Simulator doesn't enforce Apple's actual
+  extension memory ceiling.

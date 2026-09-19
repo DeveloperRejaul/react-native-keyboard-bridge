@@ -4,32 +4,32 @@
 Accepted.
 
 ## Context
-Before this ADR, the library was four separate workspace packages: `@react-native-custom-keyboard/core`
+Before this ADR, the library was four separate workspace packages: `@react-native-keyboard-bridge/core`
 (gestures/prediction/layout types/the iOS compiler), `packages/android` (raw Gradle module, not an
 npm package at all — wired into `example/android` via a hand-edited `settings.gradle`
 `project(':customkeyboard-android')` reference), `packages/ios` (Swift sources + a Ruby script
 hardcoded to `example/ios/CustomKeyboardExample.xcodeproj`'s exact paths/target names), and
-`react-native-custom-keyboard` (the actual published npm package — just the JS bridge/settings
+`react-native-keyboard-bridge` (the actual published npm package — just the JS bridge/settings
 functions). A real external consumer would have needed to: install two npm packages, hand-copy or
 git-submodule `packages/android`/`packages/ios`, manually edit their `settings.gradle`/
 `app/build.gradle`/`MainApplication.kt`/`AndroidManifest.xml`, and hand-run a script that only
 understood this repository's own file layout. The maintainer asked for one end result: `yarn add
-react-native-custom-keyboard` as the *only* install step.
+react-native-keyboard-bridge` as the *only* install step.
 
 ## Decision
-Everything folds into the single `react-native-custom-keyboard` package:
-- `src/` — the JS bridge/settings functions (unchanged) plus gestures/layouts/prediction
-  (formerly `@react-native-custom-keyboard/core`).
-- `src/compiler/miniReactBundle.ts` (`bundleKeyboardApp`) — moved in too, compiled with its own
+Everything folds into the single `react-native-keyboard-bridge` package:
+- `core/` (renamed from `src/` by ADR-010) — the JS bridge/settings functions (unchanged) plus
+  gestures/layouts/prediction (formerly `@react-native-keyboard-bridge/core`).
+- `core/compiler/miniReactBundle.ts` (`bundleKeyboardApp`) — moved in too, compiled with its own
   `tsconfig.compiler.json` (CommonJS output, since it's `require()`d by `bin/cli.js`, a plain Node
   script — never by Metro) instead of the main `tsconfig.json` (ES2020 modules, for Metro). Still
-  never re-exported from `src/index.ts` (unchanged rule from ADR-005 — pulling `@babel/core` into
+  never re-exported from `core/index.ts` (unchanged rule from ADR-005 — pulling `@babel/core` into
   an app's Metro graph breaks bundling).
 - `android/` — the former `packages/android`'s Gradle module, unchanged in content except two
   fixes made while moving it (see below): now a normal autolinked Android library dependency.
 - `ios/` — the former `packages/ios`'s Swift/JS sources plus a **generalized**
   `setup_xcode_targets.rb` (see below).
-- `bin/cli.js` — new. `npx react-native-custom-keyboard setup-ios [iosDir]` and
+- `bin/cli.js` — new. `npx react-native-keyboard-bridge setup-ios [iosDir]` and
   `build-keyboard <entry> <outFile>` are the only commands a consumer ever runs by hand.
 
 **Two real bugs fixed while moving `packages/android`, not just a file move:**
@@ -78,18 +78,18 @@ make that one remaining step a single command instead of a repo-specific script:
 
 ## Consequences
 - `packages/core`, `packages/android`, `packages/ios` no longer exist as separate directories —
-  everything under `packages/react-native/`.
+  everything under one package (`src/`, per ADR-010; its inner pure-TS folder is `core/`).
 - `scripts/build-ios-keyboard-bundle.js` (a repo-specific wrapper) is deleted — its job is now
   `bin/cli.js`'s `build-keyboard` command, which this repo's own `example` uses the same way any
-  external consumer would (`node ../packages/react-native/bin/cli.js build-keyboard ...`, or
-  `npx react-native-custom-keyboard build-keyboard ...` once actually installed from npm).
+  external consumer would (`node ../src/bin/cli.js build-keyboard ...`, or
+  `npx react-native-keyboard-bridge build-keyboard ...` once actually installed from npm).
 - `@babel/core`/`@babel/preset-typescript`/`@babel/plugin-transform-react-jsx` moved from
   `devDependencies` to real `dependencies` — they now ship to every consumer (via `bin/cli.js`),
   not just this repo's own build. This is intentional and necessary, not a regression of ADR-005's
   concern: they're only ever `require()`d from `bin/cli.js`, a plain Node script Metro never
   bundles, same guarantee as before.
 - `@babel/parser`/`@babel/traverse`/`@babel/types` — leftover dependencies of the old
-  `compileKeyboardSource` compiler (removed from `@react-native-custom-keyboard/core` in an
+  `compileKeyboardSource` compiler (removed from `@react-native-keyboard-bridge/core` in an
   earlier pass this session) — were still listed in that package's `package.json` with nothing
   importing them. Dropped during the merge rather than carried into the consolidated
   `package.json`.

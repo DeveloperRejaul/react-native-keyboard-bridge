@@ -1,7 +1,13 @@
 # ADR-005: iOS embeds a minimal JS runtime, superseding ADR-001's schema interpreter
 
+**Superseded by [ADR-008](ADR-008-ios-full-react-native.md)** — iOS now runs full React Native
+(Hermes + JSI + Fabric) instead of this mini-runtime. Kept for history: the height-constraint bug
+described in "Consequences" below was a real bug in the code this ADR introduced, and the
+reasoning for why a mini-runtime was chosen over full RN in the first place is still useful
+context for why ADR-008 was a considered decision, not a snap one.
+
 ## Status
-Accepted — supersedes ADR-001 and ADR-004.
+Superseded — see above. Originally: Accepted, superseding ADR-001 and ADR-004.
 
 ## Context
 ADR-001 ruled out embedding a live JS runtime in the iOS keyboard extension,
@@ -46,8 +52,8 @@ Only three import sources are recognized by the compiler — everything else
 is a compile error, not a silent best-effort guess (same principle
 `compileKeyboardSource` already followed): `"react"` (`useState`),
 `"react-native"` (`View`/`Text`/`TouchableOpacity`/`StyleSheet`), and
-`"react-native-custom-keyboard"` — most of
-`packages/react-native/src/bridge.ts`'s function names, so the *same*
+`"react-native-keyboard-bridge"` — most of
+`src/core/bridge.ts`'s function names, so the *same*
 `KeyboardApp.tsx` can call them on both platforms.
 
 **Bridge-function parity is not 1:1** — `UITextDocumentProxy`/
@@ -66,7 +72,7 @@ all — `setSelection`, `getExtractedText`, `sendKeyEvent`,
 `hideKeyboard` — is still defined in the prelude, as a **safe no-op** (or a
 resolved safe default for value-returning ones), rather than left undefined
 (which would surface as a bare, confusing `ReferenceError`) — the same
-convention `packages/react-native/src/bridge.ts` itself already follows when
+convention `src/core/bridge.ts` itself already follows when
 its native module isn't available. See
 `packages/ios/Resources/mini-react-runtime.js`'s header comment and
 docs/api.md's parity table for the full list and reasoning per function.
@@ -92,12 +98,12 @@ barrel (`src/index.ts`).** It pulls in the full `@babel/core` transform
 pipeline (`@babel/helper-module-transforms` etc.), which requires Node
 builtins (`assert`) that don't exist in a React Native app's JS bundle. When
 this was briefly exported from the barrel, any app depending on
-`@react-native-custom-keyboard/core` for anything (even just the `KeyLayout`
-schema types, via `react-native-custom-keyboard`'s `<CustomKeyboard>`
+`@react-native-keyboard-bridge/core` for anything (even just the `KeyLayout`
+schema types, via `react-native-keyboard-bridge`'s `<CustomKeyboard>`
 component) broke at Metro-bundle time with `Unable to resolve module assert`.
 Fixed by keeping `bundleKeyboardApp` a deep-import-only, build-time-only
 export (`scripts/build-ios-keyboard-bundle.js` requires
-`@react-native-custom-keyboard/core/dist/compiler/miniReactBundle` directly)
+`@react-native-keyboard-bridge/core/dist/compiler/miniReactBundle` directly)
 and moving `@babel/core`/`@babel/preset-typescript`/
 `@babel/plugin-transform-react-jsx` to `devDependencies`. `compileKeyboardSource`
 (ADR-001's original compiler, `@babel/parser`/`@babel/traverse` only) stays

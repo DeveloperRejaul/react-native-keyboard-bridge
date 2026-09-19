@@ -108,7 +108,7 @@ android {
 }
 
 dependencies {
-    // react-native-custom-keyboard's Android module is autolinked automatically (see
+    // react-native-keyboard-bridge's Android module is autolinked automatically (see
     // settings.gradle) — no explicit `implementation project(...)` needed.
 
     // The version of react-native is set by the React Native Gradle Plugin

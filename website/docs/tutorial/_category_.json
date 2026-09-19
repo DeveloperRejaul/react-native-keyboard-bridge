@@ -1,0 +1,8 @@
+{
+  "label": "Tutorial: Build a Real Keyboard",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "A complete, cumulative build of a real keyboard — QWERTY basics, a second language layout, swipe-typing, word prediction, native feel, and an onboarding screen."
+  }
+}

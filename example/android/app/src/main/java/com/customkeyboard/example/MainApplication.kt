@@ -15,7 +15,7 @@ class MainApplication : Application(), ReactApplication {
       // KeyboardSettingsModule runs here (the app's own ReactHost), not inside the IME — see
       // docs/api.md's "Native modules > Android" section. It's added automatically by
       // autolinking's generated PackageList — no manual `add(...)` needed — because
-      // react-native-custom-keyboard's react-native.config.js declares it as this dependency's
+      // react-native-keyboard-bridge's react-native.config.js declares it as this dependency's
       // `packageInstance`. KeyboardBridgePackage (the IME-only one) is deliberately NOT
       // autolinked onto this ReactHost; CustomKeyboardService builds its own separate one.
       packageList = PackageList(this).packages,

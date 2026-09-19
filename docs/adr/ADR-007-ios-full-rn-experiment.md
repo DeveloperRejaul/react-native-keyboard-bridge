@@ -1,6 +1,13 @@
 # ADR-007: Full React Native (Hermes/JSI/Fabric) in the iOS extension — experiment status
 
-## Status
+**Promoted to production by [ADR-008](ADR-008-ios-full-react-native.md).** This ADR's findings
+(the render worked once the height bug was fixed, `RCTRootViewFactory` needs no `UIWindow`, no
+crash observed in this session's testing) are the evidence base ADR-008 acted on. Kept as the
+detailed, blow-by-blow record of exactly how that verification was done — useful precedent for
+future iOS extension debugging in this sandboxed-agent environment.
+
+## Status (historical — see ADR-008 for the current state)
+Experiment concluded successfully enough to promote. Original status text below, for history:
 **Experimental / visually confirmed rendering, text input not yet wired — not adopted as the
 default.** `KeyboardViewController` defaults back to the ADR-005 mini-runtime
 (`useExperimentalFullRN = false`); the full-RN path is fully functional to the extent built, kept
@@ -23,7 +30,7 @@ this boundary.
 - `example/ios/Podfile`: a second `use_react_native!` block for the `CustomKeyboardExtension`
   target (previously RN pods were only in the app target).
 - `example/ios/CustomKeyboardExtension/FullRNKeyboardBootstrap.swift` (app-owned, experimental —
-  **not** shipped in `packages/react-native/ios/`, the npm package's actual iOS sources): wraps
+  **not** shipped in `src/ios/`, the npm package's actual iOS sources): wraps
   `RCTReactNativeFactory` + `RCTAppDependencyProvider`, but calls
   `factory.rootViewFactory.view(withModuleName:)` instead of
   `startReactNative(withModuleName:in:launchOptions:)` — the latter requires a `UIWindow`, which
@@ -33,7 +40,7 @@ this boundary.
   the extension's own bundle rather than a Metro dev-server URL — sidesteps the fact that
   keyboard extensions have no network access without the user granting "Allow Full Access"
   (`RequestsOpenAccess` in Info.plist), which can't be automated in this environment.
-- `packages/react-native/ios/KeyboardViewController.swift`: a temporary `useExperimentalFullRN`
+- `src/ios/KeyboardViewController.swift`: a temporary `useExperimentalFullRN`
   flag branches `viewDidLoad()` to the new bootstrap instead of `JSKeyboardRuntime`. **This is a
   live edit to the actual library file** — revert it (`useExperimentalFullRN = false`, or remove
   the branch entirely) before treating the library as in its ADR-005 state again.

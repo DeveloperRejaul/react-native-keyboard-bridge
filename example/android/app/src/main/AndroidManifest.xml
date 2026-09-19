@@ -24,7 +24,7 @@
         </intent-filter>
       </activity>
       <!-- CustomKeyboardService's <service> entry is NOT declared here — it merges in
-           automatically from react-native-custom-keyboard's own AndroidManifest.xml (a normal
+           automatically from react-native-keyboard-bridge's own AndroidManifest.xml (a normal
            Android library dependency), see docs/adr/ADR-006. This app still supplies
            @string/keyboard_service_label and @xml/method below (res/values/strings.xml,
            res/xml/method.xml) — the keyboard's branding/subtypes are this app's own. -->

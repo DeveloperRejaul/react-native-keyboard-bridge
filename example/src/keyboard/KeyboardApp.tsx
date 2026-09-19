@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { commitText, deleteSurroundingText } from 'react-native-custom-keyboard';
+import { commitText, deleteSurroundingText } from 'react-native-keyboard-bridge';
 
 /**
  * Rendered as the `KeyboardApp` RN component, mounted by
@@ -9,7 +9,7 @@ import { commitText, deleteSurroundingText } from 'react-native-custom-keyboard'
  * Written entirely by hand — plain `View`/`Text`/`TouchableOpacity`, this
  * app's own row data, this app's own shift state — to demonstrate that the
  * library imposes no schema at all. The only thing that comes from
- * `react-native-custom-keyboard` is the raw bridge:
+ * `react-native-keyboard-bridge` is the raw bridge:
  * `commitText`/`deleteSurroundingText`. No `KeyLayout`, no `Key`, no
  * `CustomKeyboard` component required.
  */
@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#012c82',
     paddingVertical: 4,
+
   },
   row: {
     flexDirection: 'row',

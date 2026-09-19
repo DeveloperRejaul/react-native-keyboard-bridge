@@ -1,0 +1,69 @@
+.features {
+  display: flex;
+  align-items: stretch;
+  padding: 4rem 0 1rem;
+  width: 100%;
+}
+
+.featureCol {
+  margin-bottom: 1.25rem;
+}
+
+.featureCard {
+  position: relative;
+  height: 100%;
+  padding: 1.75rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-surface-color);
+  overflow: hidden;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.featureCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ifm-color-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.featureCard:hover {
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -20px rgba(0, 0, 0, 0.3);
+}
+
+.featureCard:hover::before {
+  opacity: 1;
+}
+
+.featureIconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--ifm-color-primary-contrast-background);
+  color: var(--ifm-color-primary);
+  margin-bottom: 1rem;
+}
+
+.featureIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.featureCard h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.featureCard p {
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 0;
+}

@@ -1,5 +1,5 @@
 /**
- * react-native-custom-keyboard example app.
+ * react-native-keyboard-bridge example app.
  * A minimal harness for exercising the custom keyboard end to end: type into
  * the TextInput below using the "Custom Keyboard" IME (enable it in system
  * settings, then switch to it from this field).
@@ -18,7 +18,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import { isKeyboardEnabled, openInputMethodSettings, showInputMethodPicker } from 'react-native-custom-keyboard';
+import { isKeyboardEnabled, openInputMethodSettings, showInputMethodPicker } from 'react-native-keyboard-bridge';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -32,7 +32,7 @@ function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <Text style={styles.title}>react-native-custom-keyboard</Text>
+      <Text style={styles.title}>react-native-keyboard-bridge</Text>
       <Text style={styles.hint}>
         {enabled
           ? 'Switch to "My Custom Keyboard" below, then type in the field.'
