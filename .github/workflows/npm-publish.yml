@@ -42,6 +42,9 @@ jobs:
             exit 1
           fi
 
+      - name: Copy README/LICENSE for npm
+        run: cp README.md LICENSE src/
+
       - name: Publish
         working-directory: src
         run: npm publish --provenance --access public

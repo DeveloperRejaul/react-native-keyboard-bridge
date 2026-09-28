@@ -5,6 +5,11 @@ build/
 .DS_Store
 coverage/
 
+# Copied in by the release workflow so `npm publish` (run from src/) bundles
+# them — root README.md/LICENSE stay the single source of truth.
+src/README.md
+src/LICENSE
+
 # Android
 src/android/.gradle/
 src/android/build/

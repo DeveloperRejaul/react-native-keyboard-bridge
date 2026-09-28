@@ -1,6 +1,6 @@
 {
   "name": "react-native-keyboard-bridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Design a mobile system keyboard with ordinary React Native components. Single install: JS bridge, Android native module (autolinked), iOS native module (real React Native, Hermes+JSI+Fabric) + setup CLI, gestures, and word prediction all in one package.",
   "keywords": [

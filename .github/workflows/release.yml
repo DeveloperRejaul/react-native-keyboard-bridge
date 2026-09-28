@@ -71,6 +71,10 @@ jobs:
             --title "v${{ steps.version.outputs.version }}" \
             --notes-file release-notes.md
 
+      - name: Copy README/LICENSE for npm
+        if: steps.version.outputs.is_new == 'true'
+        run: cp README.md LICENSE src/
+
       - name: Publish to npm
         if: steps.version.outputs.is_new == 'true'
         working-directory: src
