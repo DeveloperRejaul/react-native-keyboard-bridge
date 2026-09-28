@@ -1,5 +1,8 @@
 # react-native-keyboard-bridge
 
+[![npm version](https://img.shields.io/npm/v/react-native-keyboard-bridge.svg)](https://www.npmjs.com/package/react-native-keyboard-bridge)
+[![npm downloads](https://img.shields.io/npm/dm/react-native-keyboard-bridge.svg)](https://www.npmjs.com/package/react-native-keyboard-bridge)
+[![CI](https://github.com/DeveloperRejaul/react-native-keyboard-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/DeveloperRejaul/react-native-keyboard-bridge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Build a mobile system keyboard (an Android IME / iOS Custom Keyboard
@@ -207,6 +210,10 @@ example/                 Demo app + the reference keyboard implementation
 docs/adr/                Architecture Decision Records
 docs/api.md              Public API reference
 ```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Contributing
 

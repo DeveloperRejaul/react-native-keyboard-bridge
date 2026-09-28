@@ -111,6 +111,24 @@ npx react-native start
    message and PR description are where that reasoning should live, not
    left implicit.
 
+## Release process (maintainers)
+
+Publishing to npm is handled by [`.github/workflows/npm-publish.yml`](.github/workflows/npm-publish.yml) —
+nobody runs `npm publish` locally.
+
+1. Bump `version` in [`src/package.json`](src/package.json) (semver).
+2. Move the relevant `Unreleased` entries in [`CHANGELOG.md`](CHANGELOG.md) under a new
+   `## [x.y.z] - YYYY-MM-DD` heading, and add its compare-link footnote.
+3. Commit (`chore(release): vx.y.z`) and push to `main`.
+4. Create a GitHub Release with tag `vx.y.z` (matching `src/package.json`'s version exactly — the
+   workflow refuses to publish if they disagree) and publish it.
+5. The workflow then installs, lints, tests, builds, and runs `npm publish --provenance` from
+   `src/` automatically.
+
+This requires an `NPM_TOKEN` repository secret — an npm **Automation** access token from the
+publishing account, added under the repo's Settings → Secrets and variables → Actions. It can also
+be triggered manually via the Actions tab (`workflow_dispatch`) if a release wasn't used to fire it.
+
 ## Reporting bugs / requesting features
 
 Open a GitHub issue. Include your React Native version, platform (Android/

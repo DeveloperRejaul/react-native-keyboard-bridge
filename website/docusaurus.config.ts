@@ -14,11 +14,14 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://developerrejaul.github.io',
-  baseUrl: '/react-native-keyboard-bridge/',
+  // Published to a separate GitHub account's <org>.github.io repo, so the
+  // site is served at the domain root, not under a project sub-path.
+  url: 'https://keyboardbridge.github.io',
+  baseUrl: '/',
 
-  organizationName: 'DeveloperRejaul',
-  projectName: 'react-native-keyboard-bridge',
+  organizationName: 'keyboardbridge',
+  projectName: 'Keyboardbridge.github.io',
+  deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
 

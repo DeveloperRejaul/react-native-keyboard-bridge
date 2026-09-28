@@ -1,0 +1,39 @@
+name: Deploy docs site
+
+on:
+  push:
+    branches: [main]
+    paths: ['website/**', '.github/workflows/deploy-docs.yml']
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: Build & publish to keyboardbridge/Keyboardbridge.github.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: website/yarn.lock
+
+      - name: Install dependencies
+        working-directory: website
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        working-directory: website
+        run: yarn build
+
+      - name: Deploy to keyboardbridge/Keyboardbridge.github.io
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
+          external_repository: keyboardbridge/Keyboardbridge.github.io
+          publish_branch: gh-pages
+          publish_dir: ./website/build
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy docs: ${{ github.sha }}'
