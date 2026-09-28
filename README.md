@@ -4,6 +4,11 @@
 [![npm downloads](https://img.shields.io/npm/dm/react-native-keyboard-bridge.svg)](https://www.npmjs.com/package/react-native-keyboard-bridge)
 [![CI](https://github.com/DeveloperRejaul/react-native-keyboard-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/DeveloperRejaul/react-native-keyboard-bridge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-keyboardbridge.github.io-blue)](https://keyboardbridge.github.io/)
+
+**📖 Full documentation, a 6-part step-by-step tutorial, the complete API reference, and a blog live at
+[keyboardbridge.github.io](https://keyboardbridge.github.io/)** — this README is the quick-start; the
+website is the deep dive.
 
 Build a mobile system keyboard (an Android IME / iOS Custom Keyboard
 Extension) out of ordinary React Native components — `View`, `Text`,
@@ -41,6 +46,16 @@ No schema, no config file, no proprietary layout DSL to learn — it's the
 React Native you already know. Any language or script works: `commitText`
 takes a plain Unicode string, so Bangla, Arabic, Devanagari, CJK, and
 right-to-left layouts are all first-class, not an afterthought.
+
+## Documentation
+
+| | |
+|---|---|
+| [Installation](https://keyboardbridge.github.io/docs/installation) | Android/iOS setup, and wiring up your host app's `App.tsx` |
+| [Tutorial](https://keyboardbridge.github.io/docs/tutorial/basic-keyboard) | 6 steps: a basic keyboard → multi-language → swipe typing → word prediction → feel & polish → a settings screen |
+| [API Reference](https://keyboardbridge.github.io/docs/api/overview) | Every exported function/type, plus the Android/iOS bridge-function parity table |
+| [Advanced](https://keyboardbridge.github.io/docs/advanced/project-structure) | Production project structure, a full multi-file example, user-configurable settings & theming |
+| [Blog](https://keyboardbridge.github.io/blog) | Deep dives on IME/extension architecture, swipe typing, prediction, onboarding, and more |
 
 ## Why this exists
 
@@ -164,13 +179,15 @@ import { openInputMethodSettings, showInputMethodPicker } from 'react-native-key
 | Text editing | `InputConnection`, via a native bridge module (`KeyboardBridgeModule.kt`) | `UITextDocumentProxy`, via a native bridge module (`KeyboardBridgeModule.swift`) |
 
 Not every bridge function has an equivalent on both platforms — iOS's keyboard
-extension API surface is smaller than Android's. See
-[`docs/api.md`](docs/api.md)'s bridge-function parity table for exactly
+extension API surface is smaller than Android's. See the
+[bridge-function parity table](https://keyboardbridge.github.io/docs/api/bridge-functions)
+(or [`docs/api.md`](docs/api.md) for the same table in-repo) for exactly
 which functions are fully supported, approximated, or Android-only (calling
 an Android-only function on iOS is a safe no-op, never a crash).
 
 Full reasoning for every architectural choice is in [`docs/adr/`](docs/adr/);
-[`docs/api.md`](docs/api.md) is the complete public API reference.
+the [API Reference](https://keyboardbridge.github.io/docs/api/overview)
+(mirrored in-repo at [`docs/api.md`](docs/api.md)) is the complete public API reference.
 
 ## Status
 

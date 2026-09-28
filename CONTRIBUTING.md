@@ -113,21 +113,31 @@ npx react-native start
 
 ## Release process (maintainers)
 
-Publishing to npm is handled by [`.github/workflows/npm-publish.yml`](.github/workflows/npm-publish.yml) —
-nobody runs `npm publish` locally.
+Releasing — git tag, GitHub Release, and npm publish — is fully automated by
+[`.github/workflows/release.yml`](.github/workflows/release.yml). Nobody runs `npm publish`,
+`git tag`, or creates a GitHub Release by hand.
 
 1. Bump `version` in [`src/package.json`](src/package.json) (semver).
 2. Move the relevant `Unreleased` entries in [`CHANGELOG.md`](CHANGELOG.md) under a new
    `## [x.y.z] - YYYY-MM-DD` heading, and add its compare-link footnote.
 3. Commit (`chore(release): vx.y.z`) and push to `main`.
-4. Create a GitHub Release with tag `vx.y.z` (matching `src/package.json`'s version exactly — the
-   workflow refuses to publish if they disagree) and publish it.
-5. The workflow then installs, lints, tests, builds, and runs `npm publish --provenance` from
-   `src/` automatically.
+
+That's it. The push triggers `release.yml`, which:
+- installs, lints, tests, and builds;
+- checks whether tag `vx.y.z` already exists (skips everything below if so — pushing to `main`
+  without bumping the version is a no-op release-wise);
+- creates and pushes the `vx.y.z` tag;
+- creates a GitHub Release from it, with its body pulled straight from that version's
+  `CHANGELOG.md` section;
+- runs `npm publish --provenance --access public` from `src/`.
 
 This requires an `NPM_TOKEN` repository secret — an npm **Automation** access token from the
 publishing account, added under the repo's Settings → Secrets and variables → Actions. It can also
-be triggered manually via the Actions tab (`workflow_dispatch`) if a release wasn't used to fire it.
+be re-run manually via the Actions tab (`workflow_dispatch`) if needed.
+
+[`.github/workflows/npm-publish.yml`](.github/workflows/npm-publish.yml) is a separate, manual-only
+fallback (`workflow_dispatch`, or a hand-created GitHub Release via the web UI) for re-publishing
+without going through the automated flow above.
 
 ## Reporting bugs / requesting features
 
