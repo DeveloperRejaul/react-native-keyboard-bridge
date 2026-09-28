@@ -15,7 +15,8 @@
     "swipe-typing",
     "word-prediction"
   ],
-  "homepage": "https://developerrejaul.github.io/react-native-keyboard-bridge/",
+  "homepage": "https://keyboardbridge.github.io/",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DeveloperRejaul/react-native-keyboard-bridge.git",
